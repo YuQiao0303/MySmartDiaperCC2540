@@ -1,17 +1,15 @@
 #ifndef __DHT11_H__
 #define __DHT11_H__
 
-#include "OSAL.h"
 
 #define DATA_PIN P2_0
 #define uchar unsigned char
 typedef unsigned int  uint;
-
-
-
+//--------------
+#include "OSAL.h"
 
 #define TABLE_SIZE 4
-#define DATA_SIZE 7
+#define DATA_SIZE 6
 
 
 typedef struct
@@ -20,16 +18,16 @@ typedef struct
     uint8 data[32][7];
 }Stored_data;
 
-extern uchar currentData[3]; 
-extern uchar lastData[3];
+
 extern Stored_data *stored_data;
 extern bool android_ready;
 
 
-uint dataChange();
-void updateLastData();
+extern bool pee();
+extern void updateLastData();
 
 
+//-----------------
 extern void Delay_ms(unsigned int xms);	//延时函数
 extern void COM(void);                  // 温湿写入
 extern void DHT11(void);                //温湿传感启动

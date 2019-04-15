@@ -1953,8 +1953,8 @@ void SimpleBLE_DisplayTestKeyValue()
 }
 #endif
 
-#define BUFFER_SIZE 7
-void saveKeyData(uint8 *buffer)  //把buffer存到stored_data->data
+#define BUFFER_SIZE 6
+void saveData(uint8 *buffer)  //把buffer存到stored_data->data
 {
     int tableIndex = 0;   //0~3
     int temp = 0x01;
@@ -1984,13 +1984,13 @@ void saveKeyData(uint8 *buffer)  //把buffer存到stored_data->data
 			break;
     }
 }
-void keyTime2Buffer(uint8 *buffer)
+void Data2Buffer(uint8 *buffer)
 {
-    //前三个字节赋为按键状态
+    //前两个字节赋为按键状态
 
-        buffer[0] = currentData[0];
-        buffer[1] = currentData[1];
-        buffer[2] = currentData[2];
+        buffer[0] = wendu_shi;
+        buffer[1] = shidu_shi;
+        
     
 
     // 后四个字节赋为UTC秒时间------------------
@@ -1998,10 +1998,10 @@ void keyTime2Buffer(uint8 *buffer)
     uint32 buffer32[1] ; //0 1 2 3
     buffer32[0] = time;
     //uint8 buffer8[4];    
-    buffer[3] = *((uint8 *)buffer32+3); //3 2 1 0
-    buffer[4] = *((uint8 *)buffer32+2);
-    buffer[5] = *((uint8 *)buffer32+1);
-    buffer[6] = *((uint8 *)buffer32+0);
+    buffer[2] = *((uint8 *)buffer32+3); //3 2 1 0
+    buffer[3] = *((uint8 *)buffer32+2);
+    buffer[4] = *((uint8 *)buffer32+1);
+    buffer[5] = *((uint8 *)buffer32+0);
 }
 
 
@@ -2044,7 +2044,7 @@ void sendStoredData()
 下面这个函数每100ms执行一次:
 
 */
-
+#define SAVE_POWER  1
 void simpleBLE_SendMyData_ForTest()
 {
     uint8 buffer[BUFFER_SIZE] = {3};  
@@ -2052,7 +2052,9 @@ void simpleBLE_SendMyData_ForTest()
     static uint16 count_500ms = 0;
     count_100ms++;
     
-    if(count_100ms >= 20){//600-60s 
+    if(SAVE_POWER == 0)   //非省电模式，直接发
+    {
+        if(count_100ms >= 20){//600-60s 
         DHT11();           //获取温湿度
         buffer[0]=wendu_shi;
         buffer[1]=shidu_shi;
@@ -2060,48 +2062,59 @@ void simpleBLE_SendMyData_ForTest()
         qq_write(buffer, 2);
         osal_set_event(simpleBLETaskId, SBP_DATA_EVT); 
         count_100ms=0;
+        }
     }
 
-//    if(count_100ms >= 5)//600-60s   //这里的数值秒数的十倍，比如为10就是每隔1s发送一次  //每隔500ms执行以下内容
-//    {
-//        //如果蓝牙没连上
-//        if(!simpleBLE_IfConnected())
-//        {
-//            android_ready = false;
-//        }
-//        check_keys();     //获取按键状况
-//        if(keyStateChange())   //如果按键状况发生变化，则将其内容用蓝牙发送给手机app
-//        {
-//            keyTime2Buffer(buffer);  //把按键数据和当前时间存到buffer
-//            if(simpleBLE_IfConnected()&& android_ready)  //如果连上了蓝牙，发送消息
-//            {
-//                qq_write(buffer, BUFFER_SIZE);
-//                osal_set_event(simpleBLETaskId, SBP_DATA_EVT); 
-//                if(!simpleBLE_IfConnected())   //如果发完消息发现没连上蓝牙，就保存数据
-//                {
-//                    saveKeyData(buffer);
-//                    android_ready = false;
-//                }
-//            }
-//            else    //如果此时没连上蓝牙，也保存数据
-//            {
-//                saveKeyData(buffer);
-//                android_ready = false;
-//            }
-//            
-//        } //end of if keyStateChange()
-//        else     //按键状态没变
-//        {
-//            if(count_500ms>=6)  //每隔三秒判断是否有存储的数据要发送
-//            {
-//                sendStoredData();
-//            }
-//        }
-//                
-//      updateLastKeys();
-//      count_100ms=0;
-//      count_500ms ++;  //每500ms自增
-//    }
+    else
+    {   
+      //省电模式
+        if(count_100ms >= 20)//600-60s   //这里的数值秒数的十倍，比如为10就是每隔1s发送一次  //每隔500ms执行以下内容
+        {
+            //如果蓝牙没连上
+            if(!simpleBLE_IfConnected())
+            {
+                android_ready = false;
+            }
+            DHT11();           //获取温湿度
+            buffer[0]=wendu_shi;
+            buffer[1]=shidu_shi;
+            //如果湿度大于40且上次湿度小于40
+            if(pee())   //如果排尿，则将其内容用蓝牙发送给手机app
+            {
+                Data2Buffer(buffer);  //把按键数据和当前时间存到buffer
+                if(simpleBLE_IfConnected()&& android_ready)  //如果连上了蓝牙，发送消息
+                {
+                    qq_write(buffer, BUFFER_SIZE);
+                    osal_set_event(simpleBLETaskId, SBP_DATA_EVT); 
+                    if(!simpleBLE_IfConnected())   //如果发完消息发现没连上蓝牙，就保存数据
+                    {
+                        saveData(buffer);
+                        android_ready = false;
+                    }
+                }
+                else    //如果此时没连上蓝牙，也保存数据
+                {
+                    qq_write(buffer, BUFFER_SIZE);  //这里发消息是为了方便用其他APP进行调试
+                    osal_set_event(simpleBLETaskId, SBP_DATA_EVT); 
+                    saveData(buffer);
+                    android_ready = false;
+                }
+                
+            } //end of if keyStateChange()
+            else     //按键状态没变
+            {
+                if(count_500ms>=6)  //每隔三秒判断是否有存储的数据要发送
+                {
+                    sendStoredData();
+                }
+            }
+                    
+          updateLastData();
+          count_100ms=0;
+          count_500ms ++;  //每500ms自增
+        }
+    }
+    
 }
 
 

@@ -1,8 +1,9 @@
 #include <ioCC2540.h>
 #include "DHT11.H"
 //
-uchar currentData[3];  //电平
-uchar lastData[3] ={0,0,0};
+
+uchar lastHumidity;
+uchar lastTemperature;
 Stored_data *stored_data;
 bool android_ready;
 //温湿度定义
@@ -129,3 +130,32 @@ void DHT11(void)   //温湿传感启动
     
     P2DIR |= 0x01; //IO口需要重新配置 
 }
+//---------------下面的内容是省电模式新增
+void stored_data_Init(){
+    //开机初始化stored_data;
+    for(int i=0;i<TABLE_SIZE;i++)
+    {
+        stored_data->table[i] = 0x00;
+
+    }
+    for(int i=0;i<32;i++)
+    {
+      for(int j=0;j<7;j++)
+        stored_data->data[i][j] = 0;
+    }
+    android_ready = false;
+}
+
+bool pee(){
+    bool flag;
+    if(shidu_shi >= 40 && lastHumidity<40)
+        flag = true;
+    else 
+        flag = false;
+    return flag;
+}
+
+void updateLastData(){
+    lastHumidity = shidu_shi;
+}
+
