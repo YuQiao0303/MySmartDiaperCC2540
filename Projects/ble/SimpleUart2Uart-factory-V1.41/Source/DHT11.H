@@ -21,11 +21,11 @@ typedef struct
 
 extern Stored_data *stored_data;
 extern bool android_ready;
-
+extern bool save_power;
 
 extern bool pee();
 extern void updateLastData();
-
+extern void stored_data_Init();
 
 //-----------------
 extern void Delay_ms(unsigned int xms);	//ÑÓÊ±º¯Êý

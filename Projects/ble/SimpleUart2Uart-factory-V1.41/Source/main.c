@@ -98,6 +98,7 @@ int main(void)
   
 //  InitLed();   //设置LED灯相应的IO口     //这是之前振动传感器的，用了我们的io口，要注释掉
 //  InitKey();   //设置S1相应的IO口
+  stored_data_Init();  //存储数据表初始化
 
   //InitUart();  
   

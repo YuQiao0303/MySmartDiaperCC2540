@@ -6,6 +6,7 @@ uchar lastHumidity;
 uchar lastTemperature;
 Stored_data *stored_data;
 bool android_ready;
+bool save_power;
 //温湿度定义
 uchar ucharFLAG,uchartemp;
 uchar shidu_shi,shidu_ge,wendu_shi,wendu_ge=4;
@@ -105,7 +106,7 @@ void DHT11(void)   //温湿传感启动
         ucharcheckdata_temp=ucharcomdata;
         DATA_PIN=1; 
         uchartemp=(ucharT_data_H_temp+ucharT_data_L_temp+ucharRH_data_H_temp+ucharRH_data_L_temp);
-        if(uchartemp==ucharcheckdata_temp)
+        if(uchartemp==ucharcheckdata_temp) 
         {
             ucharRH_data_H=ucharRH_data_H_temp;
             ucharRH_data_L=ucharRH_data_L_temp;
@@ -129,7 +130,16 @@ void DHT11(void)   //温湿传感启动
     } 
     
     P2DIR |= 0x01; //IO口需要重新配置 
+    
 }
+
+
+
+
+
+
+
+
 //---------------下面的内容是省电模式新增
 void stored_data_Init(){
     //开机初始化stored_data;
@@ -144,11 +154,12 @@ void stored_data_Init(){
         stored_data->data[i][j] = 0;
     }
     android_ready = false;
+    save_power = false;
 }
 
 bool pee(){
     bool flag;
-    if(shidu_shi >= 40 && lastHumidity<40)
+    if(shidu_shi >= 45 && lastHumidity<45)
         flag = true;
     else 
         flag = false;

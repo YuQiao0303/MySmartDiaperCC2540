@@ -2044,7 +2044,7 @@ void sendStoredData()
 下面这个函数每100ms执行一次:
 
 */
-#define SAVE_POWER  1
+
 void simpleBLE_SendMyData_ForTest()
 {
     uint8 buffer[BUFFER_SIZE] = {3};  
@@ -2052,7 +2052,7 @@ void simpleBLE_SendMyData_ForTest()
     static uint16 count_500ms = 0;
     count_100ms++;
     
-    if(SAVE_POWER == 0)   //非省电模式，直接发
+    if(save_power == false)   //非省电模式，直接发
     {
         if(count_100ms >= 20){//600-60s 
         DHT11();           //获取温湿度
@@ -2078,6 +2078,12 @@ void simpleBLE_SendMyData_ForTest()
             DHT11();           //获取温湿度
             buffer[0]=wendu_shi;
             buffer[1]=shidu_shi;
+            //如果读取温湿度失败，还是要告知安卓端
+            if(wendu_shi == 0x55)
+            {
+                qq_write(buffer, 2);
+                osal_set_event(simpleBLETaskId, SBP_DATA_EVT); 
+            }
             //如果湿度大于40且上次湿度小于40
             if(pee())   //如果排尿，则将其内容用蓝牙发送给手机app
             {

@@ -1178,8 +1178,8 @@ void onWriteChar6(uint8 *newChar6Value)
 {
 
   android_ready = true;  //安卓端写了Char6, 说明它已经打开通知了，我可以发notification了
-  //如果第三个字节末三位有不为0的，重置时间
-  if(newChar6Value[2] & 0x07)   // 0000 0111 
+  //如果第三个字节均为ff，重置时间
+  if(newChar6Value[1] == 0xff && newChar6Value[2] == 0xff)   // 0000 0111 
   {
     UTCTime time ;
     uint32 buffer32[1] ; //0 1 2 3
@@ -1189,6 +1189,16 @@ void onWriteChar6(uint8 *newChar6Value)
     *((uint8 *)buffer32+0) = newChar6Value[6];   
     time = buffer32[0];
     osal_setClock(time);
+  }
+  //打开省电模式
+  if(newChar6Value[0] == 0x22)
+  {
+      save_power = true;
+  }
+  //关闭省电模式
+  if(newChar6Value[0] == 0x33)
+  {
+      save_power = false;
   }
 
 }
