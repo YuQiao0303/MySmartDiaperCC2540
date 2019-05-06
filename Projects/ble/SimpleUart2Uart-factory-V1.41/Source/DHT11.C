@@ -159,7 +159,7 @@ void stored_data_Init(){
 
 bool pee(){
     bool flag;
-    if(shidu_shi >= 45 && lastHumidity<45)
+    if(shidu_shi >= 60 && lastHumidity<60)
         flag = true;
     else 
         flag = false;
